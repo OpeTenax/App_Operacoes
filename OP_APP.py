@@ -1,10 +1,6 @@
 import streamlit as st
 import streamlit as st
 from streamlit_msal import Msal
-
-client_id = "bfd3bcad-c28b-43bd-a835-02bc69cdaf5c"
-authority = "https://login.microsoftonline.com/cc2d437c-9657-43ce-b9b9-a84614e5f413"
-
 with st.sidebar:
     auth_data = Msal.initialize_ui(
         client_id=client_id,
