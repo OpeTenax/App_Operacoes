@@ -1,6 +1,11 @@
 import streamlit as st
 import streamlit as st
 from streamlit_msal import Msal
+
+# Acessando os segredos do Streamlit
+client_id = st.secrets['azure']["client_id"]
+authority = st.secrets['azure']["authority"]
+
 with st.sidebar:
     auth_data = Msal.initialize_ui(
         client_id=client_id,
