@@ -2,8 +2,6 @@ import streamlit as st
 from streamlit_msal import Msal
 from azure.storage.blob import BlobServiceClient
 import pandas as pd
-import plotly.figure_factory as ff
-import plotly.express as px
 import io
 import numpy as np
 import datetime as datetime
