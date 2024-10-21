@@ -170,9 +170,7 @@ def tratar_trades_lote(TRADES_LOTE):
     )).reset_index()
     TRADES_LOTE_OFF['Quantidade_Boleta_Lote45'] = abs(TRADES_LOTE_OFF['Quantidade_Boleta_Lote45'])
     TRADES_LOTE_OFF['PM_LOTE'] = round(abs(TRADES_LOTE_OFF['Financeiro'] / TRADES_LOTE_OFF['Quantidade_Boleta_Lote45']),8)
-
     TRADES_LOTE_OFF = ajustar_multiplicadores(TRADES_LOTE_OFF)
-    
     
     #Concatenando
     TRADES_LOTE_FINAL = pd.concat([TRADES_LOTE_PM,TRADES_LOTE_BMF,TRADES_LOTE_OFF])
@@ -277,11 +275,12 @@ def pivot_table_attribution(df,fundo_desejado):
 
 #! '''Função para testar alguma sub'''
 def sub_teste():
-    date = datetime.datetime.today()
-    data_selecionada_DBY = date.strftime('%Y%m%d')
-    data_selecionada_DBY = '20241018'
+    # date = datetime.datetime.today()
+    # data_selecionada_DBY = date.strftime('%Y%m%d')
+    # data_selecionada_DBY = '20241018'
     # load_trades_off(data_selecionada_DBY)
-    TRADES_OFF = tratar_trades_clearing_off(load_trades_off(data_selecionada_DBY))
+    # TRADES_OFF = tratar_trades_clearing_off(load_trades_off(data_selecionada_DBY))
+    st.warning('Em desenvolvimento')  
 
 def base_tabela_final(TRADES_CLEARING,TRADES_LOTE,TRADES_OFF,DE_PARA_B3):
     # Renomeando as colunas 'Symbol' para 'Product' e 'Entering Firm' para 'Dealer'
