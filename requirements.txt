@@ -4,4 +4,4 @@ azure.storage.blob
 pandas
 numpy
 datetime
-io
+StringIO
