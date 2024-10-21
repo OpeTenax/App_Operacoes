@@ -2,8 +2,6 @@ streamlit
 streamlit_msal
 azure.storage.blob
 pandas
-plotly.figure_factory
-plotly.express
 numpy
 datetime
 io
