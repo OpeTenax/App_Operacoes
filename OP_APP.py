@@ -306,39 +306,11 @@ def base_tabela_final(TRADES_CLEARING,TRADES_LOTE,TRADES_OFF,DE_PARA_B3):
     TRADES_LOTE_OFF['PM'] = TRADES_LOTE_OFF['PM_LOTE']
     TRADES_OFF['PM'] = TRADES_OFF['PM_CLEARING']
     df_comparacao_OFF = pd.merge(TRADES_OFF,TRADES_LOTE_OFF, how='outer',on=['Product', 'Side', 'Dealer','PM'])
-
-
-    # col1,col2 = st.columns(2)
-    # with col1:
-    #     st.write('Bovespa')
-    #     TRADES_LOTE_BOVESPA
-    #     st.write('BMF')
-    #     TRADES_LOTE_BMF
-    #     st.write('OFF')
-    #     TRADES_LOTE_OFF
-
-    # with col2:
-    #     st.write('Bovespa')
-    #     TRADES_CLEARING_BOVESPA
-    #     st.write('BMF')
-    #     TRADES_CLEARING_BMF
-    #     st.write('OFF')
-    #     TRADES_OFF
-
-
-
     df_comparacao = pd.concat([df_comparacao_BOVESPA,df_comparacao_BMF,df_comparacao_OFF])
     df_comparacao = df_comparacao.fillna(0)
     # Calculando as diferenças de quantidade e preço médio
     df_comparacao['Diferença_Quantidade'] = df_comparacao['Quantidade_Boleta_Lote45'] - df_comparacao['Quantidade_Operada_CLEARING']
     df_comparacao['Diferença_PM'] = df_comparacao['PM_LOTE'] - df_comparacao['PM_CLEARING']
-    
-    
-    #! Data Frane com unmatches:
-    # df_comparacao_erro = df_comparacao[df_comparacao['Diferença_Quantidade']!=0]
-    # df_comparacao_erro
-    # df_comparacao_erro[['Product', 'Side', 'Dealer','PM']][df_comparacao_erro['Product']=='IBOVW126']
-    
     return df_comparacao
 
 #! '''Código base para o Batimento de Trades'''
