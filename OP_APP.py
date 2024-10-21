@@ -206,7 +206,7 @@ def ajustar_multiplicadores(TRADES_LOTE_OFF):
     CLASSES_COM_PRICELOT10 = ['MXN/USD Futures - CME']
     
     cond1 = TRADES_LOTE_OFF['ProductClass'].isin(CLASSES_COM_PRICELOT10)
-    TRADES_LOTE_OFF.loc[cond1,'PM_LOTE'] = TRADES_LOTE_OFF['PM_LOTE']*10
+    TRADES_LOTE_OFF.loc[cond1,'PM_LOTE'] = round(TRADES_LOTE_OFF['PM_LOTE']*10,8)
     
     return TRADES_LOTE_OFF
 
