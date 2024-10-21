@@ -2,7 +2,6 @@ import streamlit as st
 from streamlit_msal import Msal
 from azure.storage.blob import BlobServiceClient
 import pandas as pd
-import io
 import numpy as np
 import datetime as datetime
 from io import StringIO
