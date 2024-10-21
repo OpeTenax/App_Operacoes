@@ -1,7 +1,7 @@
 pip install --upgrade pip
 streamlit
 streamlit_msal
-azure.storage.blob
+azure-storage-blob
 pandas
 numpy
 datetime
