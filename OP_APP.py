@@ -355,9 +355,10 @@ def batimento_de_trades(TRADES_LOTE,TRADES_CLEARING,TRADES_OFF,DE_PARA_B3):
     if filtrar_erros=='OK':
         resumo_trades = resumo_trades[(resumo_trades['Diferença_Quantidade']==0) & (resumo_trades['Diferença_PM']==0)]
 
+    resumo_trades.rename(columns={'Quantidade_Boleta_Lote45': 'Qtde Lote45','Quantidade_Operada_CLEARING':'Qtde Clearing','Diferença_Quantidade':'Dif Qtde','PM_LOTE':'Preço Médio LOTE45','PM_CLEARING':'Preço Médio Clearing','Diferença_PM':'Dif no Preço Médio'}, inplace=True)
     # Exibindo o DataFrame comparativo
-    st.dataframe(resumo_trades[['Product', 'Side', 'Dealer', 'Quantidade_Boleta_Lote45', 'Quantidade_Operada_CLEARING', 'Diferença_Quantidade', 'PM_LOTE', 'PM_CLEARING', 'Diferença_PM']],hide_index=True,use_container_width=True,)
-
+    st.dataframe(resumo_trades[['Product', 'Side', 'Dealer', 'Qtde Lote45', 'Qtde Clearing', 'Dif Qtde', 'Preço Médio LOTE45', 'Preço Médio Clearing', 'Dif no Preço Médio']],hide_index=True,use_container_width=True,)
+    
 def render_sidebar(auth_data):
 
     if auth_data:
