@@ -13,6 +13,7 @@ connection_string = st.secrets['azure']["connection_string"]
 container_name = st.secrets['azure']['container_name']
 
 
+# Mapeamentos princiais
 acoes = ['Tenax Acoes A FIC FIA','Tenax Acoes Alocadores FIC FIA','Tenax Acoes FIC FIA','Tenax Acoes Institucional A FIC FIA','Tenax Acoes Master FIA','Tenax Acoes Master Institucional FIA','TX A Acoes FIA','Tenax Equity Hedge FIM']
 macro = ['Tenax Macro A FIC FIM','Tenax Macro Alocadores FIC FIM','Tenax Macro FIC FIM','Tenax Macro Master FIM']
 total_return = ['Tenax Total Return A FIC FIM','Tenax Total Return Alocadores FIC FIM','Tenax Total Return FIC FIM','Tenax Total Return Master FIM','Tenax Total Return Prev FIE','Tenax Total Return Prev Master FIFE','Tenax TR FIC FIA','Tenax TR Master FIA']
@@ -166,11 +167,13 @@ def tratar_trades_lote(TRADES_LOTE):
     TRADES_LOTE_OFF = TRADES_LOTE[TRADES_LOTE['ProductClass'].isin(CLASSE_PRODUTOS_OFF)]
     TRADES_LOTE_OFF = TRADES_LOTE_OFF.groupby(['Dealer','ProductClass','Product','Side','Price']).agg(
         Quantidade_Boleta_Lote45=('Amount', 'sum'),
-        Financeiro=('Financeiro', 'sum'
+        Financeiro=('Financeiro','sum'
     )).reset_index()
     TRADES_LOTE_OFF['Quantidade_Boleta_Lote45'] = abs(TRADES_LOTE_OFF['Quantidade_Boleta_Lote45'])
     TRADES_LOTE_OFF['PM_LOTE'] = round(abs(TRADES_LOTE_OFF['Financeiro'] / TRADES_LOTE_OFF['Quantidade_Boleta_Lote45']),8)
+
     TRADES_LOTE_OFF = ajustar_multiplicadores(TRADES_LOTE_OFF)
+    
     
     #Concatenando
     TRADES_LOTE_FINAL = pd.concat([TRADES_LOTE_PM,TRADES_LOTE_BMF,TRADES_LOTE_OFF])
@@ -233,7 +236,7 @@ def calcular_preco_medio_bofa(trades, exchange):
         Quantidade_Operada_CLEARING=('Qty', 'sum'),
         Financeiro=('Financeiro', 'sum')
     ).reset_index()
-    trades_pm['PM_CLEARING'] = trades_pm['Price']
+    trades_pm['PM_CLEARING'] = round(trades_pm['Price'],6)
     return trades_pm[['Exchange', 'Symbol', 'Side', 'PM_CLEARING', 'Quantidade_Operada_CLEARING', 'Entering Firm']]
 
 #!'''Funções de Pivot'''
@@ -275,12 +278,11 @@ def pivot_table_attribution(df,fundo_desejado):
 
 #! '''Função para testar alguma sub'''
 def sub_teste():
-    # date = datetime.datetime.today()
-    # data_selecionada_DBY = date.strftime('%Y%m%d')
-    # data_selecionada_DBY = '20241018'
+    date = datetime.datetime.today()
+    data_selecionada_DBY = date.strftime('%Y%m%d')
+    data_selecionada_DBY = '20241018'
     # load_trades_off(data_selecionada_DBY)
-    # TRADES_OFF = tratar_trades_clearing_off(load_trades_off(data_selecionada_DBY))
-    st.warning('Em desenvolvimento')  
+    TRADES_OFF = tratar_trades_clearing_off(load_trades_off(data_selecionada_DBY))
 
 def base_tabela_final(TRADES_CLEARING,TRADES_LOTE,TRADES_OFF,DE_PARA_B3):
     # Renomeando as colunas 'Symbol' para 'Product' e 'Entering Firm' para 'Dealer'
@@ -305,11 +307,39 @@ def base_tabela_final(TRADES_CLEARING,TRADES_LOTE,TRADES_OFF,DE_PARA_B3):
     TRADES_LOTE_OFF['PM'] = TRADES_LOTE_OFF['PM_LOTE']
     TRADES_OFF['PM'] = TRADES_OFF['PM_CLEARING']
     df_comparacao_OFF = pd.merge(TRADES_OFF,TRADES_LOTE_OFF, how='outer',on=['Product', 'Side', 'Dealer','PM'])
+
+
+    # col1,col2 = st.columns(2)
+    # with col1:
+    #     st.write('Bovespa')
+    #     TRADES_LOTE_BOVESPA
+    #     st.write('BMF')
+    #     TRADES_LOTE_BMF
+    #     st.write('OFF')
+    #     TRADES_LOTE_OFF
+
+    # with col2:
+    #     st.write('Bovespa')
+    #     TRADES_CLEARING_BOVESPA
+    #     st.write('BMF')
+    #     TRADES_CLEARING_BMF
+    #     st.write('OFF')
+    #     TRADES_OFF
+
+
+
     df_comparacao = pd.concat([df_comparacao_BOVESPA,df_comparacao_BMF,df_comparacao_OFF])
     df_comparacao = df_comparacao.fillna(0)
     # Calculando as diferenças de quantidade e preço médio
     df_comparacao['Diferença_Quantidade'] = df_comparacao['Quantidade_Boleta_Lote45'] - df_comparacao['Quantidade_Operada_CLEARING']
     df_comparacao['Diferença_PM'] = df_comparacao['PM_LOTE'] - df_comparacao['PM_CLEARING']
+    
+    
+    #! Data Frane com unmatches:
+    # df_comparacao_erro = df_comparacao[df_comparacao['Diferença_Quantidade']!=0]
+    # df_comparacao_erro
+    # df_comparacao_erro[['Product', 'Side', 'Dealer','PM']][df_comparacao_erro['Product']=='IBOVW126']
+    
     return df_comparacao
 
 #! '''Código base para o Batimento de Trades'''
@@ -320,10 +350,11 @@ def batimento_de_trades(TRADES_LOTE,TRADES_CLEARING,TRADES_OFF,DE_PARA_B3):
 
     total_bmf = np.sum(TRADES_CLEARING['Quantidade_Operada_CLEARING'][TRADES_CLEARING['Exchange']=='XBMF'])
     total_bovespa = np.sum(TRADES_CLEARING['Quantidade_Operada_CLEARING'][TRADES_CLEARING['Exchange']=='XBSP'])
+    total_off   = np.sum(TRADES_OFF['QTY'][TRADES_OFF['Dealer']=='BOFA'])
 
     total_bmf_lote = np.sum(TRADES_LOTE['Quantidade_Boleta_Lote45'][TRADES_LOTE['ProductClass'].isin(CLASSE_PRODUTOS_BMF)])
     total_bovespa_lote = np.sum(TRADES_LOTE['Quantidade_Boleta_Lote45'][TRADES_LOTE['ProductClass'].isin(CLASSE_PRODUTOS_BOVESPA)])
-
+    total_OFF_lote = np.sum(TRADES_LOTE['Quantidade_Boleta_Lote45'][TRADES_LOTE['ProductClass'].isin(CLASSE_PRODUTOS_OFF)])
 
     # trader = st.selectbox("Escolha o Trader",['XBMF','BVSP', 'OFFSHORE','TODOS'])
     col1,col2,col3 = st.columns(3)
@@ -331,13 +362,19 @@ def batimento_de_trades(TRADES_LOTE,TRADES_CLEARING,TRADES_OFF,DE_PARA_B3):
         st.metric(label='Total BMF',value=total_bmf,delta=round(total_bmf_lote/total_bmf,2)*100)
     with col2:
         st.metric(label='Total BOVESPA',value=total_bovespa,delta=round(total_bovespa_lote/total_bovespa,2)*100)
-    
+    with col3:
+        st.metric(label='Total OFFSHORE',value=total_off,delta=round(total_OFF_lote/total_off,2)*100)
+
     col4,col5,col6,col7 = st.columns(4)
     with col4:
         mercado = st.selectbox("Escolha o mercado",['TODOS','XBMF','XBSP', 'OFFSHORE'])
     with col5:
         filtrar_erros = st.selectbox('Status:',['TODOS','OK','ERRO'])
-    
+    with col6:
+        corretoras = ['TODAS']
+        corretoras.extend(set(tabela_batimento['Dealer']))
+        filtrar_corretoras = st.selectbox('Corretora',corretoras)
+
     if mercado == 'TODOS':
         resumo_trades = tabela_batimento
     elif mercado =='OFFSHORE':
@@ -353,11 +390,14 @@ def batimento_de_trades(TRADES_LOTE,TRADES_CLEARING,TRADES_OFF,DE_PARA_B3):
         resumo_trades = resumo_trades[(resumo_trades['Diferença_Quantidade']!=0) & (resumo_trades['Diferença_PM']!=0)]
     if filtrar_erros=='OK':
         resumo_trades = resumo_trades[(resumo_trades['Diferença_Quantidade']==0) & (resumo_trades['Diferença_PM']==0)]
+    
+    if filtrar_corretoras!= 'TODAS':
+        resumo_trades = resumo_trades[resumo_trades['Dealer']==filtrar_corretoras]
 
     resumo_trades.rename(columns={'Quantidade_Boleta_Lote45': 'Qtde Lote45','Quantidade_Operada_CLEARING':'Qtde Clearing','Diferença_Quantidade':'Dif Qtde','PM_LOTE':'Preço Médio LOTE45','PM_CLEARING':'Preço Médio Clearing','Diferença_PM':'Dif no Preço Médio'}, inplace=True)
     # Exibindo o DataFrame comparativo
     st.dataframe(resumo_trades[['Product', 'Side', 'Dealer', 'Qtde Lote45', 'Qtde Clearing', 'Dif Qtde', 'Preço Médio LOTE45', 'Preço Médio Clearing', 'Dif no Preço Médio']],hide_index=True,use_container_width=True,)
-    
+
 def render_sidebar(auth_data):
 
     if auth_data:
@@ -400,5 +440,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
