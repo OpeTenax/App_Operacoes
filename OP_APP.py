@@ -137,7 +137,7 @@ def tratar_trades_clearing_off(TRADES_OFF):
     return TRADES_OFF
 
 def tratar_trades_lote(TRADES_LOTE):
-    LISTA_BACK_RISC_COMPLIANCE = ['Adriano Bartolomeu','Vicente Fletes', 'Eduardo Teixeira', 'Aline Marins', 'Vitor Chiba'] 
+    LISTA_BACK_RISC_COMPLIANCE = ['Adriano Bartolomeu','Vicente Fletes', 'Eduardo Teixeira', 'Aline Marins', 'Vitor Chiba','Nilson Kaneko','Orlando Gomes'] 
     TRADES_LOTE = TRADES_LOTE[(TRADES_LOTE['ProductClass'] != 'Provisions and Costs') & (~TRADES_LOTE['Trader'].isin(LISTA_BACK_RISC_COMPLIANCE)) & ((TRADES_LOTE['IsReplicatedTrade'] == False)) & (~TRADES_LOTE['Trading Desk'].str.contains('Rateio')) & (TRADES_LOTE['Dealer'] != 'LOTE45')]
     TRADES_LOTE = TRADES_LOTE[['Trading Desk','ProductClass','Product', 'Amount','Price','FinancialPrice','Trader','Dealer','FinancialSettle']]
     TRADES_LOTE['Side'] = TRADES_LOTE['Amount'].apply(lambda x: 'Buy' if x > 0 else 'Sell')
