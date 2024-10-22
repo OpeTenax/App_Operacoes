@@ -346,6 +346,8 @@ def base_tabela_final(TRADES_CLEARING,TRADES_LOTE,TRADES_OFF,DE_PARA_B3):
 def batimento_de_trades(TRADES_LOTE,TRADES_CLEARING,TRADES_OFF,DE_PARA_B3):
     
     st.title('Batimento de Trades')
+    if st.button('Reprocessar'):
+        st.rerun()
     tabela_batimento = base_tabela_final(TRADES_CLEARING,TRADES_LOTE,TRADES_OFF,DE_PARA_B3)
 
     total_bmf = np.sum(TRADES_CLEARING['Quantidade_Operada_CLEARING'][TRADES_CLEARING['Exchange']=='XBMF'])
