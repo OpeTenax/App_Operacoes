@@ -433,11 +433,11 @@ def main():
     funcionalidade = render_sidebar(auth_data)
 
     if funcionalidade == 'Batimento de Trades':
-      date = st.sidebar.date_input("Informe a data desejada:", format='DD-MM-YYYY')  
-        try:  
-          handle_batimento_de_trades(date)
-        except:
-          st.warning('Ainda não temos arquivos disponíveis para a data selecionada.')
+        date = st.sidebar.date_input("Informe a data desejada:", format='DD-MM-YYYY')  
+            try:  
+                handle_batimento_de_trades(date)
+            except:
+                st.warning('Ainda não temos arquivos disponíveis para a data selecionada.')
     elif funcionalidade == 'On Going':
         sub_teste()
 
