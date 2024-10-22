@@ -133,11 +133,12 @@ def tratar_trades_clearing_off(TRADES_OFF):
     TRADES_OFF['Side'] = TRADES_OFF['B/S'].apply(lambda x: 'Buy' if x==1 else 'Sell')
     TRADES_OFF['Dealer'] = 'BOFA'
     TRADES_OFF['Product'] = TRADES_OFF['Product'].str.rstrip()
-    TRADES_OFF['FONTE'] = 'CLEARING'
+    TRADES_OFF = calcular_preco_medio_bofa(TRADES_OFF)
+
     return TRADES_OFF
 
 def tratar_trades_lote(TRADES_LOTE):
-    LISTA_BACK_RISC_COMPLIANCE = ['Adriano Bartolomeu','Vicente Fletes', 'Eduardo Teixeira', 'Aline Marins', 'Vitor Chiba','Nilson Kaneko','Orlando Gomes'] 
+    LISTA_BACK_RISC_COMPLIANCE = ['Adriano Bartolomeu','Vicente Fletes', 'Eduardo Teixeira', 'Aline Marins', 'Vitor Chiba','Nilson Kaneko', 'Orlando Gomes'] 
     TRADES_LOTE = TRADES_LOTE[(TRADES_LOTE['ProductClass'] != 'Provisions and Costs') & (~TRADES_LOTE['Trader'].isin(LISTA_BACK_RISC_COMPLIANCE)) & ((TRADES_LOTE['IsReplicatedTrade'] == False)) & (~TRADES_LOTE['Trading Desk'].str.contains('Rateio')) & (TRADES_LOTE['Dealer'] != 'LOTE45')]
     TRADES_LOTE = TRADES_LOTE[['Trading Desk','ProductClass','Product', 'Amount','Price','FinancialPrice','Trader','Dealer','FinancialSettle']]
     TRADES_LOTE['Side'] = TRADES_LOTE['Amount'].apply(lambda x: 'Buy' if x > 0 else 'Sell')
@@ -171,10 +172,8 @@ def tratar_trades_lote(TRADES_LOTE):
     )).reset_index()
     TRADES_LOTE_OFF['Quantidade_Boleta_Lote45'] = abs(TRADES_LOTE_OFF['Quantidade_Boleta_Lote45'])
     TRADES_LOTE_OFF['PM_LOTE'] = round(abs(TRADES_LOTE_OFF['Financeiro'] / TRADES_LOTE_OFF['Quantidade_Boleta_Lote45']),8)
-
     TRADES_LOTE_OFF = ajustar_multiplicadores(TRADES_LOTE_OFF)
-    
-    
+
     #Concatenando
     TRADES_LOTE_FINAL = pd.concat([TRADES_LOTE_PM,TRADES_LOTE_BMF,TRADES_LOTE_OFF])
     TRADES_LOTE_FINAL['FONTE'] = 'LOTE45'
@@ -230,14 +229,15 @@ def calcular_preco_medio_clearing_bmf(trades, exchange):
     trades_pm['PM_CLEARING'] = trades_pm['Price']
     return trades_pm[['Exchange', 'Symbol', 'Side', 'PM_CLEARING', 'Quantidade_Operada_CLEARING', 'Entering Firm']]
 
-def calcular_preco_medio_bofa(trades, exchange):
-    trades['Financeiro'] = trades['Qty'] * trades['Price']
-    trades_pm = trades.groupby(['Exchange', 'Entering Firm', 'Symbol', 'Side','Price']).agg(
-        Quantidade_Operada_CLEARING=('Qty', 'sum'),
+def calcular_preco_medio_bofa(TRADES_OFF):
+
+    TRADES_OFF['Financeiro'] = TRADES_OFF['QTY'] * TRADES_OFF['PM_CLEARING']
+    TRADES_OFF = TRADES_OFF.groupby(['Dealer', 'Product', 'Side','PM_CLEARING']).agg(
+        QTY=('QTY', 'sum'),
         Financeiro=('Financeiro', 'sum')
     ).reset_index()
-    trades_pm['PM_CLEARING'] = round(trades_pm['Price'],6)
-    return trades_pm[['Exchange', 'Symbol', 'Side', 'PM_CLEARING', 'Quantidade_Operada_CLEARING', 'Entering Firm']]
+    TRADES_OFF['FONTE'] = 'CLEARING'
+    return TRADES_OFF
 
 #!'''Funções de Pivot'''
 def pivot_table_resumo(df,familia_de_fundos):
@@ -307,7 +307,6 @@ def base_tabela_final(TRADES_CLEARING,TRADES_LOTE,TRADES_OFF,DE_PARA_B3):
     TRADES_LOTE_OFF['PM'] = TRADES_LOTE_OFF['PM_LOTE']
     TRADES_OFF['PM'] = TRADES_OFF['PM_CLEARING']
     df_comparacao_OFF = pd.merge(TRADES_OFF,TRADES_LOTE_OFF, how='outer',on=['Product', 'Side', 'Dealer','PM'])
-
 
     # col1,col2 = st.columns(2)
     # with col1:
@@ -389,7 +388,7 @@ def batimento_de_trades(TRADES_LOTE,TRADES_CLEARING,TRADES_OFF,DE_PARA_B3):
         resumo_trades = tabela_batimento[tabela_batimento['Exchange'] == mercado]
 
     if filtrar_erros=='ERRO':
-        resumo_trades = resumo_trades[(resumo_trades['Diferença_Quantidade']!=0) & (resumo_trades['Diferença_PM']!=0)]
+        resumo_trades = resumo_trades[((round(resumo_trades['Diferença_Quantidade'],4)!=0) | (round(resumo_trades['Diferença_PM'],4)!=0))]
     if filtrar_erros=='OK':
         resumo_trades = resumo_trades[(resumo_trades['Diferença_Quantidade']==0) & (resumo_trades['Diferença_PM']==0)]
     
@@ -435,11 +434,10 @@ def main():
     funcionalidade = render_sidebar(auth_data)
 
     if funcionalidade == 'Batimento de Trades':
-        date = st.sidebar.date_input("Informe a data desejada:", format='DD-MM-YYYY')  
+        date = st.sidebar.date_input("Informe a data desejada:", format='DD-MM-YYYY')
         handle_batimento_de_trades(date)
     elif funcionalidade == 'On Going':
         sub_teste()
 
 if __name__ == "__main__":
     main()
-
