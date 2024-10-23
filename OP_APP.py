@@ -233,7 +233,7 @@ def calcular_preco_medio_bofa(TRADES_OFF):
 
     TRADES_OFF['Financeiro'] = TRADES_OFF['QTY'] * TRADES_OFF['PM_CLEARING']
     TRADES_OFF = TRADES_OFF.groupby(['Dealer', 'Product', 'Side','PM_CLEARING']).agg(
-        QTY=('QTY', 'sum'),
+        Quantidade_Operada_CLEARING=('QTY', 'sum'),
         Financeiro=('Financeiro', 'sum')
     ).reset_index()
     TRADES_OFF['FONTE'] = 'CLEARING'
@@ -310,19 +310,13 @@ def base_tabela_final(TRADES_CLEARING,TRADES_LOTE,TRADES_OFF,DE_PARA_B3):
 
     # col1,col2 = st.columns(2)
     # with col1:
-    #     st.write('Bovespa')
-    #     TRADES_LOTE_BOVESPA
-    #     st.write('BMF')
     #     TRADES_LOTE_BMF
     #     st.write('OFF')
     #     TRADES_LOTE_OFF
 
     # with col2:
-    #     st.write('Bovespa')
-    #     TRADES_CLEARING_BOVESPA
-    #     st.write('BMF')
     #     TRADES_CLEARING_BMF
-    #     st.write('OFF')
+    #     st.write('OFF Clearing')
     #     TRADES_OFF
 
 
@@ -351,7 +345,7 @@ def batimento_de_trades(TRADES_LOTE,TRADES_CLEARING,TRADES_OFF,DE_PARA_B3):
 
     total_bmf = np.sum(TRADES_CLEARING['Quantidade_Operada_CLEARING'][TRADES_CLEARING['Exchange']=='XBMF'])
     total_bovespa = np.sum(TRADES_CLEARING['Quantidade_Operada_CLEARING'][TRADES_CLEARING['Exchange']=='XBSP'])
-    total_off   = np.sum(TRADES_OFF['QTY'][TRADES_OFF['Dealer']=='BOFA'])
+    total_off   = np.sum(TRADES_OFF['Quantidade_Operada_CLEARING'][TRADES_OFF['Dealer']=='BOFA'])
 
     total_bmf_lote = np.sum(TRADES_LOTE['Quantidade_Boleta_Lote45'][TRADES_LOTE['ProductClass'].isin(CLASSE_PRODUTOS_BMF)])
     total_bovespa_lote = np.sum(TRADES_LOTE['Quantidade_Boleta_Lote45'][TRADES_LOTE['ProductClass'].isin(CLASSE_PRODUTOS_BOVESPA)])
